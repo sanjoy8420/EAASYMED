@@ -33,7 +33,7 @@
               @if(Session::has('message'))
               toastr.success("{{session('message')}}")
               @endif
-        </script>
+             </script>
             <form action="{{url('editdoctor',$data->id)}}" method="POST" enctype="multipart/form-data">
                 @csrf
 
