@@ -11,18 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('appointments', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('doctor')->nullable();
-            $table->string('date')->nullable();
-            $table->string('message')->nullable();
-            $table->string('status')->nullable();
-            $table->string('user_id')->nullable();
-            $table->timestamps();
-        });
+        // In appointments migration
+    Schema::create('appointments', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('doctor_id')->nullable(); // Foreign key to doctors table
+    $table->string('name')->nullable();  // Patient's name
+    $table->string('email')->nullable();
+    $table->string('phone')->nullable();
+    $table->string('date')->nullable();
+    $table->string('message')->nullable();
+    $table->string('status')->nullable();
+    $table->unsignedBigInteger('user_id')->nullable();  // User ID from Auth system
+    $table->timestamps();
+
+    // Create foreign key constraint
+    $table->foreign('doctor_id')->references('id')->on('doctors')->onDelete('set null');
+});
+
     }
 
     /**

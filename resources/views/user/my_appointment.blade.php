@@ -8,7 +8,7 @@
 
   <meta name="copyright" content="MACode ID, https://macodeid.com/">
 
-  <title>One Health - Medical Center HTML5 Template</title>
+  <title>Easy Med - Medical Center HTML5 Template</title>
 
   <link rel="stylesheet" href="../assets/css/maicons.css">
 
@@ -25,6 +25,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"> </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
  
 
@@ -60,7 +62,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm">
       <div class="container">
-        <a class="navbar-brand" href="{{url('/')}}"><span class="text-primary">One</span>-Health</a>
+        <a class="navbar-brand" href="{{url('/')}}"><span class="text-primary">Easy</span>-Med</a>
 
       
 
@@ -116,20 +118,59 @@
 
   <table>
     <tr style="background-color:orange;" align="center">
-        <th style="padding:20px; font-size: 20px; color:white;">Doctor_Name </th>
-        <th style="padding:20px; font-size: 20px; color:white;"> Date</th>
+      <th style="padding:20px; font-size: 20px; color:white;">Patient Name </th>
+        <th style="padding:20px; font-size: 20px; color:white;">Doctor Name </th>
+        <th style="padding:20px; font-size: 20px; color:white;">Appointment Date&Time</th>
         <th style="padding:20px; font-size: 20px; color:white;"> Message</th>
-        <th style="padding:20px; font-size: 20px; color:white;"> Status</th>
+        {{-- <th style="padding:20px; font-size: 20px; color:white;"> Status</th> --}}
         <th style="padding:20px; font-size: 20px; color:white;"> Cancel Appointment</th>
+        <th style="padding:20px; font-size: 20px; color:white;"> Payment Status</th>
+        <th style="padding:20px; font-size: 20px; color:white;"> Download Invoice</th>
+
     </tr>
 
-    @foreach($appoint as $appoints)
+    @foreach($appointments as $appointment)
     <tr align="center">
-        <td style="padding:10px;">{{$appoints->doctor}}</td>
-        <td style="padding:10px;" >{{$appoints->date}}</td>
-        <td style="padding:10px;">{{$appoints->message}}</td>
-        <td style="padding:10px;">{{$appoints->status}}</td>
-        <td><a class="bt btn-danger" onclick="return confirm('are you sure to delete this')" href="{{url('cancel_appoint',$appoints->id)}}">Cancel</a></td>
+        <!-- Display Patient Name -->
+        <td style="padding:10px;">{{ $appointment->name }}</td>
+    
+        <!-- Display Doctor's Name -->
+        <td style="padding:10px;">
+            {{ $appointment->doctor ? $appointment->doctor->name : 'N/A' }}
+        </td>
+    
+        <td style="padding:10px;">{{ $appointment->date }} | {{ $appointment->time_slot}} </td>
+        <td style="padding:10px;">{{ $appointment->message }}</td>
+        {{-- <td style="padding:10px;">{{ $appointment->status }}</td> --}}
+        <td>
+          <button class="btn btn-danger" 
+              style="padding: 5px 10px; font-size: 12px;" 
+              onclick="confirmCancel('{{ $appointment->id }}')">
+               Cancel
+           </button>
+         </td>
+
+        <td style="padding:5px;">
+          @if ($appointment->payment_status === 'Paid')
+            <span class="text-success">Payment Successful</span>
+          @else
+            <button id="rzp-button{{ $appointment->id }}" class="btn btn-success"  style="padding: 5px 10px; font-size: 12px;"
+                    onclick="makePayment('{{ $appointment->id }}')">
+              Pay ₹500
+            </button>
+          @endif
+        </td>
+        <td>
+          @if($appointment->payment_status === 'Paid')
+              <a href="{{ route('invoice.download', $appointment->id) }}" class="btn btn-primary btn-sm">
+                  Download Invoice
+              </a>
+          @else
+              <span class="text-danger">Payment Pending</span>
+          @endif
+      </td>
+        
+
     </tr>
     @endforeach
   </table>
@@ -150,6 +191,100 @@
 
 <script src="../assets/js/theme.js"></script>
   
+<script>
+  function makePayment(appointmentId) {
+    var options = {
+        "key": "rzp_test_xw9xHtHhaVrfXY", // Replace with your Razorpay Key ID
+        "amount": 50000, // Amount is in paise (₹500 = 50000 paise)
+        "currency": "INR",
+        "name": "Easy Med",
+        "description": "Appointment Payment",
+        "image": "https://example.com/logo.png", // Optional logo URL
+        "handler": function (response) {
+            // Send payment details to the server
+            $.ajax({
+                url: "/verify_payment", // Your Laravel route to handle payment verification
+                type: "POST",
+                data: {
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    appointment_id: appointmentId,
+                    _token: "{{ csrf_token() }}" // CSRF token for security
+                },
+                success: function (data) {
+                    if (data.success) {
+                        // Show SweetAlert success message
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Payment Successful!',
+                            text: 'Thank you for your payment. Your appointment is confirmed.',
+                            showConfirmButton: false,
+                            timer: 4000
+                        }).then(() => {
+                            location.reload(); // Reload the page after alert
+                        });
+                    } else {
+                        // Show SweetAlert error message
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Verification Failed',
+                            text: 'There was an issue verifying your payment. Please contact support.',
+                        });
+                    }
+                },
+                error: function () {
+                    // Show SweetAlert error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: 'Something went wrong. Please try again.',
+                    });
+                }
+            });
+        },
+        "prefill": {
+            "name": "{{ auth()->user()->name }}", // Pre-filled user name
+            "email": "{{ auth()->user()->email }}" // Pre-filled user email
+        },
+        "theme": {
+            "color": "#3399cc" // Customize Razorpay button color
+        }
+    };
+
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+}
+
+function confirmCancel(appointmentId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, cancel it!'
+       }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect to the cancel appointment URL
+            window.location.href = "{{ url('cancel_appoint') }}/" + appointmentId;
+
+            // Optional success alert (triggered after page redirection)
+            Swal.fire({
+                title: 'Cancelled!',
+                text: 'Your appointment has been cancelled.',
+                icon: 'success',
+                
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                
+               // confirmButtonColor: '#ffffff', // OK button text color
+               
+            });
+        }
+    });
+}
+
+</script>
 
 
 </body>

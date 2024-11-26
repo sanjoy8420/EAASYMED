@@ -32,13 +32,13 @@
 
                 @foreach($data as $appoint)
                 <tr align="center" style="background-color:pink;" >
-                    <td>{{$appoint->name}}</td>
-                    <td>{{$appoint->email}}</td>
-                    <td>{{$appoint->phone}}</td>
-                    <td>{{$appoint->doctor}}</td>
-                    <td>{{$appoint->date}}</td>
-                    <td>{{$appoint->message}}</td>
-                    <td>{{$appoint->status}}</td>
+                    <td style=" color:black;">{{$appoint->name}}</td>
+                    <td style=" color:black;">{{$appoint->email}}</td>
+                    <td style=" color:black;">{{$appoint->phone}}</td>
+                    <td style=" color:black;"> {{ $appoint->doctor ? $appoint->doctor->name : 'N/A' }}</td>
+                    <td style=" color:black;">{{$appoint->date}}</td>
+                    <td style=" color:black;">{{$appoint->message}}</td>
+                    <td style=" color:black;">{{$appoint->status}}</td>
                     <td>
                         <a class="btn btn-success" href="{{url('approved',$appoint->id)}}">Approved</a>
                     </td>

@@ -25,7 +25,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
  
 
 </head>
@@ -245,7 +245,32 @@
 
 <script src="../assets/js/theme.js"></script>
   
+ 
+      @if(session('status') && session('message'))
+    <script>
+        const status = "{{ session('status') }}"; // success or error
+        const message = "{{ session('message') }}";
 
+        if (status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: message,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+        } else if (status === 'error') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: message,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Try Again'
+            });
+        }
+    </script>
+     @endif
+ 
 
 </body>
 </html>

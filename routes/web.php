@@ -32,7 +32,12 @@ Route::get('/home',[HomeController::class,'redirect'])->middleware('auth','verif
 Route::get('/',[HomeController::class,'index']);
 Route::get('/add_doctor_view',[AdminController::class,'addview']);
 Route::post('/upload_doctor',[AdminController::class,'upload']);
+
+Route::post('/get-available-time-slots', [HomeController::class, 'getAvailableTimeSlots']);
 Route::post('/appointment',[HomeController::class,'appointment']);
+Route::post('/verify_payment', [HomeController::class, 'verifyPayment'])->name('verify.payment');
+Route::get('/appointment/{id}/invoice', [HomeController::class, 'generateInvoice'])->name('invoice.download');
+
 Route::get('/myappointment',[HomeController::class,'myappointment']);
 Route::get('/cancel_appoint/{id}',[HomeController::class,'cancel_appoint']);
 Route::get('/showappointment',[AdminController::class,'showappointment']);
